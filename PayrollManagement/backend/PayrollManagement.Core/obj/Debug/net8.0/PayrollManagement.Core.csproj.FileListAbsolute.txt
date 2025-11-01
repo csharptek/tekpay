@@ -1,0 +1,13 @@
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/bin/Debug/net8.0/PayrollManagement.Core.deps.json
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/bin/Debug/net8.0/PayrollManagement.Core.dll
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/bin/Debug/net8.0/PayrollManagement.Core.pdb
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.csproj.AssemblyReference.cache
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.GeneratedMSBuildEditorConfig.editorconfig
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.AssemblyInfoInputs.cache
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.AssemblyInfo.cs
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.csproj.CoreCompileInputs.cache
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.sourcelink.json
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.dll
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/refint/PayrollManagement.Core.dll
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/PayrollManagement.Core.pdb
+/tmp/csharptek/tekpay/PayrollManagement/backend/PayrollManagement.Core/obj/Debug/net8.0/ref/PayrollManagement.Core.dll
