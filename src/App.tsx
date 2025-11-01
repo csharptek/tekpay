@@ -2,6 +2,11 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import HRDashboard from './pages/Dashboard/HRDashboard';
 import EmployeeDashboard from './pages/Dashboard/EmployeeDashboard';
+import Employees from './pages/HR/Employees';
+import PayrollProcessing from './pages/HR/PayrollProcessing';
+import Incentives from './pages/HR/Incentives';
+import Settings from './pages/HR/Settings';
+import Reports from './pages/HR/Reports';
 import { useAuthStore } from './store/authStore';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -51,8 +56,60 @@ export default function App() {
           </RequireAuth>
         }
       />
+      
+      {/* HR-specific routes */}
+      <Route
+        path="/hr/employees"
+        element={
+          <RequireAuth>
+            <RequireRole role="HR">
+              <Employees />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/hr/payroll"
+        element={
+          <RequireAuth>
+            <RequireRole role="HR">
+              <PayrollProcessing />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/hr/incentives"
+        element={
+          <RequireAuth>
+            <RequireRole role="HR">
+              <Incentives />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/hr/settings"
+        element={
+          <RequireAuth>
+            <RequireRole role="HR">
+              <Settings />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/hr/reports"
+        element={
+          <RequireAuth>
+            <RequireRole role="HR">
+              <Reports />
+            </RequireRole>
+          </RequireAuth>
+        }
+      />
+      
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
-
