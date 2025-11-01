@@ -2,12 +2,13 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import HRDashboard from './pages/Dashboard/HRDashboard';
 import EmployeeDashboard from './pages/Dashboard/EmployeeDashboard';
-import Employees from './pages/HR/Employees';
+import { Employees } from './pages/HR/Employees';
 import PayrollProcessing from './pages/HR/PayrollProcessing';
 import Incentives from './pages/HR/Incentives';
 import Settings from './pages/HR/Settings';
 import Reports from './pages/HR/Reports';
 import { useAuthStore } from './store/authStore';
+import { Toaster } from '@/components/ui/toaster';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const token = useAuthStore((s) => s.token);
@@ -33,7 +34,8 @@ export default function App() {
   useAuthStore((s) => s.hydrated);
 
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
@@ -110,6 +112,8 @@ export default function App() {
       />
       
       <Route path="*" element={<Navigate to="/login" replace />} />
-    </Routes>
+      </Routes>
+      <Toaster />
+    </>
   );
 }
