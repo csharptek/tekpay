@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Users, Clock, DollarSign, UserCheck, Calendar } from 'lucide-react';
-import DashboardLayout from '@/components/Layout/DashboardLayout';
-import SummaryCard from '@/components/UI/SummaryCard';
-import ChartContainer from '@/components/UI/ChartContainer';
-import ActivityTable from '@/components/UI/ActivityTable';
+import { DashboardLayout } from '@/components/Layout/DashboardLayout';
+import { SummaryCard } from '@/components/UI/SummaryCard';
+import { ChartContainer } from '@/components/UI/ChartContainer';
+import { ActivityTable } from '@/components/UI/ActivityTable';
 import { getDashboardSummary, getDashboardTrends, getDashboardActivities } from '@/api/dashboard';
 import type { DashboardSummary, TrendData, Activity } from '@/api/dashboard';
 

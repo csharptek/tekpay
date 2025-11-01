@@ -6,6 +6,7 @@ interface AuthState {
   token: string | null;
   role: Role | null;
   userName: string | null;
+  user: { name: string } | null;
   hydrated: boolean;
   setUser: (token: string, role: Role, userName?: string) => void;
   logout: () => void;
@@ -25,6 +26,7 @@ export const useAuthStore = create<AuthState>((set) => {
     token,
     role,
     userName,
+    user: userName ? { name: userName } : null,
     hydrated: true,
     setUser: (token: string, role: Role, userName?: string) => {
       const finalUserName = userName || (role === 'HR' ? 'HR Manager' : 'Employee');
@@ -33,7 +35,7 @@ export const useAuthStore = create<AuthState>((set) => {
         localStorage.setItem(ROLE_KEY, role);
         localStorage.setItem(USERNAME_KEY, finalUserName);
       }
-      set({ token, role, userName: finalUserName });
+      set({ token, role, userName: finalUserName, user: { name: finalUserName } });
     },
     logout: () => {
       if (typeof window !== 'undefined') {
@@ -41,7 +43,7 @@ export const useAuthStore = create<AuthState>((set) => {
         localStorage.removeItem(ROLE_KEY);
         localStorage.removeItem(USERNAME_KEY);
       }
-      set({ token: null, role: null, userName: null });
+      set({ token: null, role: null, userName: null, user: null });
     },
   };
 });

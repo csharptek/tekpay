@@ -2,9 +2,14 @@
 // In real app replace with actual API and remove this mock.
 import type { Role } from '@/store/authStore';
 import type { Employee } from '@/types/employee';
+import type { PayrollEntry, PayrollSummary, PayrollBreakdown } from '@/types/payroll';
 import { calculateSalaryBreakup } from '@/utils/salaryCalculations';
+import { calculatePayrollEntry, calculatePayrollBreakdown } from '@/utils/payrollCalculations';
 
 const originalFetch = window.fetch.bind(window);
+
+// Helper function for simulating API delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Mock employee data storage
 let mockEmployees: Employee[] = [
@@ -120,6 +125,31 @@ let mockEmployees: Employee[] = [
 
 let nextEmployeeId = 6;
 
+// Mock payroll data storage
+let mockPayrollEntries: PayrollEntry[] = [];
+
+// Generate mock payroll data for current month
+function generateMockPayrollData(month: string): PayrollEntry[] {
+  return mockEmployees.map((employee, index) => {
+    const presentDays = 24 - Math.floor(Math.random() * 3); // 22-24 present days
+    const reimbursements = Math.floor(Math.random() * 5000); // 0-5000 reimbursements
+    const incentiveAdjustment = employee.incentives?.includeHalfYearlyIncentive ? 
+      Math.floor(Math.random() * 10000) : 0;
+
+    return calculatePayrollEntry({
+      employee,
+      month,
+      presentDays,
+      reimbursements,
+      incentiveAdjustment,
+    });
+  });
+}
+
+// Initialize payroll data for current month
+const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM format
+mockPayrollEntries = generateMockPayrollData(currentMonth);
+
 window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
   const url = typeof input === 'string' ? input : input.toString();
   const method = init?.method?.toUpperCase() || 'GET';
@@ -227,6 +257,237 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
         JSON.stringify({ message: 'Malformed request' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       );
+    }
+  }
+
+  // Payroll endpoints
+  if (url.startsWith('/api/payroll')) {
+    // GET /api/payroll/{month}
+    if (method === 'GET' && url.match(/^\/api\/payroll\/\d{4}-\d{2}$/)) {
+      const month = url.split('/').pop()!;
+      await delay(500);
+      
+      // Generate payroll data for the requested month if not exists
+      const monthEntries = mockPayrollEntries.filter(entry => entry.month === month);
+      if (monthEntries.length === 0) {
+        const newEntries = generateMockPayrollData(month);
+        mockPayrollEntries.push(...newEntries);
+        return new Response(JSON.stringify(newEntries), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      return new Response(JSON.stringify(monthEntries), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // GET /api/payroll/{month}/summary
+    if (method === 'GET' && url.match(/^\/api\/payroll\/\d{4}-\d{2}\/summary$/)) {
+      const month = url.split('/')[3];
+      await delay(300);
+      
+      const monthEntries = mockPayrollEntries.filter(entry => entry.month === month);
+      const summary: PayrollSummary = {
+        month,
+        totalEmployees: monthEntries.length,
+        processedEmployees: monthEntries.length,
+        pendingApprovals: monthEntries.filter(e => e.status === 'Pending').length,
+        approvedEmployees: monthEntries.filter(e => e.status === 'Approved').length,
+        rejectedEmployees: monthEntries.filter(e => e.status === 'Rejected').length,
+        totalPayrollAmount: monthEntries.reduce((sum, e) => sum + e.netPayable, 0),
+        totalIncentiveAdjustments: monthEntries.reduce((sum, e) => sum + (e.incentiveAdjustment || 0), 0),
+        totalDeductions: monthEntries.reduce((sum, e) => sum + e.deductions.pf + e.deductions.esi + e.deductions.pt + e.deductions.tds, 0),
+        netPayrollAmount: monthEntries.reduce((sum, e) => sum + e.netPayable, 0),
+      };
+      
+      return new Response(JSON.stringify(summary), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // POST /api/payroll/calculate
+    if (method === 'POST' && url === '/api/payroll/calculate') {
+      await delay(2000); // Simulate calculation time
+      
+      const body = JSON.parse(init?.body as string);
+      const { month, recalculate } = body;
+      
+      // Regenerate payroll data for the month
+      const newEntries = generateMockPayrollData(month);
+      mockPayrollEntries = mockPayrollEntries.filter(entry => entry.month !== month);
+      mockPayrollEntries.push(...newEntries);
+      
+      return new Response(JSON.stringify({
+        success: true,
+        message: `Payroll calculated successfully for ${newEntries.length} employees`,
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // PUT /api/payroll/{id}/approve
+    if (method === 'PUT' && url.match(/^\/api\/payroll\/[^\/]+\/approve$/)) {
+      const id = url.split('/')[3];
+      await delay(300);
+      
+      const entry = mockPayrollEntries.find(e => e.id === id);
+      if (!entry) {
+        return new Response(JSON.stringify({ error: 'Payroll entry not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const body = JSON.parse(init?.body as string);
+      entry.status = 'Approved';
+      entry.approvedAt = new Date().toISOString();
+      entry.approvedBy = body.approvedBy;
+      
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // PUT /api/payroll/{id}/reject
+    if (method === 'PUT' && url.match(/^\/api\/payroll\/[^\/]+\/reject$/)) {
+      const id = url.split('/')[3];
+      await delay(300);
+      
+      const entry = mockPayrollEntries.find(e => e.id === id);
+      if (!entry) {
+        return new Response(JSON.stringify({ error: 'Payroll entry not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const body = JSON.parse(init?.body as string);
+      entry.status = 'Rejected';
+      entry.rejectedAt = new Date().toISOString();
+      entry.rejectedBy = body.rejectedBy;
+      entry.rejectionReason = body.reason;
+      
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // GET /api/payroll/{id}/breakdown
+    if (method === 'GET' && url.match(/^\/api\/payroll\/[^\/]+\/breakdown$/)) {
+      const id = url.split('/')[3];
+      await delay(300);
+      
+      const entry = mockPayrollEntries.find(e => e.id === id);
+      if (!entry) {
+        return new Response(JSON.stringify({ error: 'Payroll entry not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const employee = mockEmployees.find(e => e.id === entry.employeeId);
+      if (!employee) {
+        return new Response(JSON.stringify({ error: 'Employee not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const breakdown = calculatePayrollBreakdown(entry, employee);
+      
+      return new Response(JSON.stringify(breakdown), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // PUT /api/payroll/{month}/approve-all
+    if (method === 'PUT' && url.match(/^\/api\/payroll\/\d{4}-\d{2}\/approve-all$/)) {
+      const month = url.split('/')[3];
+      await delay(500);
+      
+      const body = JSON.parse(init?.body as string);
+      const pendingEntries = mockPayrollEntries.filter(e => e.month === month && e.status === 'Pending');
+      
+      pendingEntries.forEach(entry => {
+        entry.status = 'Approved';
+        entry.approvedAt = new Date().toISOString();
+        entry.approvedBy = body.approvedBy;
+      });
+      
+      return new Response(JSON.stringify({
+        success: true,
+        count: pendingEntries.length,
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // PUT /api/payroll/{id}/reimbursements
+    if (method === 'PUT' && url.match(/^\/api\/payroll\/[^\/]+\/reimbursements$/)) {
+      const id = url.split('/')[3];
+      await delay(300);
+      
+      const entry = mockPayrollEntries.find(e => e.id === id);
+      if (!entry) {
+        return new Response(JSON.stringify({ error: 'Payroll entry not found' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const body = JSON.parse(init?.body as string);
+      entry.reimbursements = body.reimbursements;
+      
+      // Recalculate net payable
+      const grossSalary = entry.basicSalary + entry.hra + entry.allowances + entry.reimbursements + (entry.incentiveAdjustment || 0);
+      const totalDeductions = entry.deductions.pf + entry.deductions.esi + entry.deductions.pt + entry.deductions.tds + entry.lossOfPay;
+      entry.netPayable = grossSalary - totalDeductions + entry.roundOffAdjustment;
+      
+      return new Response(JSON.stringify(entry), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // GET /api/payroll/export/{month}
+    if (method === 'GET' && url.match(/^\/api\/payroll\/export\/\d{4}-\d{2}/)) {
+      const month = url.split('/')[4];
+      await delay(1000);
+      
+      const urlParams = new URLSearchParams(url.split('?')[1] || '');
+      const format = urlParams.get('format') || 'excel';
+      
+      // Mock file content
+      const content = format === 'excel' ? 
+        'Employee ID,Name,Net Payable\n' + mockPayrollEntries
+          .filter(e => e.month === month)
+          .map(e => `${e.employeeId},${e.employeeName},${e.netPayable}`)
+          .join('\n') :
+        mockPayrollEntries
+          .filter(e => e.month === month && e.status === 'Approved')
+          .map(e => `${e.employeeId}|${e.employeeName}|${e.netPayable}`)
+          .join('\n');
+      
+      const blob = new Blob([content], { 
+        type: format === 'excel' ? 'application/vnd.ms-excel' : 'text/plain' 
+      });
+      
+      return new Response(blob, {
+        status: 200,
+        headers: { 
+          'Content-Type': format === 'excel' ? 'application/vnd.ms-excel' : 'text/plain',
+          'Content-Disposition': `attachment; filename="payroll-${month}.${format === 'excel' ? 'csv' : 'txt'}"`,
+        },
+      });
     }
   }
 
