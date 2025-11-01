@@ -1,4 +1,4 @@
-import DashboardLayout from '@/components/Layout/DashboardLayout';
+import { DashboardLayout } from '@/components/Layout/DashboardLayout';
 
 export default function Reports() {
   return (
@@ -18,4 +18,3 @@ export default function Reports() {
     </DashboardLayout>
   );
 }
-

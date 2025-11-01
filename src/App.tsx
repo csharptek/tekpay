@@ -3,7 +3,7 @@ import LoginPage from './pages/LoginPage';
 import HRDashboard from './pages/Dashboard/HRDashboard';
 import EmployeeDashboard from './pages/Dashboard/EmployeeDashboard';
 import { Employees } from './pages/HR/Employees';
-import PayrollProcessing from './pages/HR/PayrollProcessing';
+import { PayrollProcessing } from './pages/HR/PayrollProcessing';
 import Incentives from './pages/HR/Incentives';
 import Settings from './pages/HR/Settings';
 import Reports from './pages/HR/Reports';
